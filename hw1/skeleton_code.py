@@ -23,7 +23,14 @@ def feature_normalization(train, test):
         train_normalized - training set after normalization
         test_normalized - test set after normalization
     """
-    # TODO
+    _, num_features = train.shape
+    train_normalized, test_normalized = np.array(train), np.array(test)
+    for i in range(num_features):
+        Max = train[:,i].max()
+        Min = train[:,i].min()
+        train_normalized[:,i] = (train[:,i] - Min)/(Max - Min)
+        test_normalized[:,i] = (test[:,i] - Min)/(Max - Min)
+    return train_normalized, test_normalized
 
 
 #######################################
@@ -41,7 +48,8 @@ def compute_square_loss(X, y, theta):
         loss - the average square loss, scalar
     """
     loss = 0 #Initialize the average square loss
-    #TODO
+    loss = np.mean((y - np.matmul(X, theta))**2)
+    return loss
 
 
 #######################################
@@ -58,7 +66,9 @@ def compute_square_loss_gradient(X, y, theta):
     Returns:
         grad - gradient vector, 1D numpy array of size (num_features)
     """
-    #TODO
+    num_instances, num_features = X.shape
+    loss = 2./num_instances * np.dot(X.T, (np.matmul(X, theta) - y))
+    return loss
 
 
 #######################################
@@ -100,7 +110,14 @@ def grad_checker(X, y, theta, epsilon=0.01, tolerance=1e-4):
     true_gradient = compute_square_loss_gradient(X, y, theta) #The true gradient
     num_features = theta.shape[0]
     approx_grad = np.zeros(num_features) #Initialize the gradient we approximate
-    #TODO
+    
+    for i in range(num_features):
+        directions = np.zeros(num_features)
+        directions[i] = 1
+        approx_grad[i] = (compute_square_loss(X, y, theta+epsilon*directions) - compute_square_loss(X, y, theta-epsilon*directions)) / (2*epsilon)
+    error = np.linalg.norm(true_gradient - approx_grad)
+
+    return error < tolerance
 
 
 #######################################
@@ -112,7 +129,17 @@ def generic_gradient_checker(X, y, theta, objective_func, gradient_func, epsilon
     gradient for objective_func(X, y, theta).
     Eg: In LSR, the objective_func = compute_square_loss, and gradient_func = compute_square_loss_gradient
     """
-    #TODO
+    true_gradient = gradient_func(X, y, theta)
+    num_features, _ = theta.shape
+    approx_grad = np.zeros(num_features)
+
+    for i in range(num_features):
+        directions = np.zeros(num_features)
+        directions[i] = 1
+        approx_grad[i] = (objective_func(X, y, theta+epsilon*directions) - objective_func(X, y, theta-epsilon*directions)) / (2*epsilon)
+    error = np.linalg.norm(true_gradient - approx_grad)
+
+    return error < tolerance
 
 
 #######################################
@@ -138,7 +165,16 @@ def batch_grad_descent(X, y, alpha=0.1, num_step=1000, grad_check=False):
     theta_hist = np.zeros((num_step+1, num_features)) #Initialize theta_hist
     loss_hist = np.zeros(num_step+1) #Initialize loss_hist
     theta = np.zeros(num_features) #Initialize theta
-    #TODO
+    
+    theta_hist[0,:] = theta
+    loss_hist[0] = compute_square_loss(X, y, theta)
+    for i in range(num_step):
+        grad = compute_square_loss_gradient(X, y, theta)
+        theta -= alpha * grad
+        theta_hist[i+1, :] = theta
+        loss_hist[i+1] = compute_square_loss(X, y, theta)
+    
+    return theta_hist, loss_hist
 
 
 #######################################
@@ -162,7 +198,8 @@ def compute_regularized_square_loss_gradient(X, y, theta, lambda_reg):
     Returns:
         grad - gradient vector, 1D numpy array of size (num_features)
     """
-    #TODO
+    grad = compute_square_loss_gradient(X, y, theta) + lambda_reg * np.dot(theta.T, theta)
+    return grad
 
 
 #######################################
@@ -185,11 +222,28 @@ def regularized_grad_descent(X, y, alpha=0.05, lambda_reg=10**-2, num_step=1000)
     theta = np.zeros(num_features) #Initialize theta
     theta_hist = np.zeros((num_step+1, num_features)) #Initialize theta_hist
     loss_hist = np.zeros(num_step+1) #Initialize loss_hist
-    #TODO
+    
+    theta_hist[0, :] = theta
+    loss_hist[0] = compute_square_loss(X, y, theta)
+    for i in range(num_step):
+        grad = compute_regularized_square_loss_gradient(X, y, theta, lambda_reg)
+        theta -= alpha * grad
+        theta_hist[i+1, :] = theta
+        loss_hist[i+1] = compute_square_loss(X, y, theta)
+    
+    return theta_hist, loss_hist
 
 
 #######################################
 ### Stochastic gradient descent
+def compute_sdg_squared_loss(X, y, theta):
+    return (np.dot(theta, X) - y)**2 + lambda_reg * np.dot(theta.T, theta)
+
+
+def compute_sdg_squared_loss_gradient(X, y, theta, lambda_reg):
+    return 2*X*(np.dot(theta, X) - y) + 2*lambda_reg*theta
+
+
 def stochastic_grad_descent(X, y, alpha=0.01, lambda_reg=10**-2, num_epoch=1000):
     """
     In this question you will implement stochastic gradient descent with regularization term
@@ -215,7 +269,33 @@ def stochastic_grad_descent(X, y, alpha=0.01, lambda_reg=10**-2, num_epoch=1000)
 
     theta_hist = np.zeros((num_epoch, num_instances, num_features)) #Initialize theta_hist
     loss_hist = np.zeros((num_epoch, num_instances)) #Initialize loss_hist
-    #TODO
+    
+    iter_indices = np.arange(num_instances)
+    step_size = 10
+
+    for i in range(num_epoch):
+        np.random.shuffle(iter_indices)
+
+        for row in iter_indices:
+            grad = compute_sdg_squared_loss_gradient(X[row], y[row], theta, lambda_reg)
+
+            if isinstance(alpha, float):
+                theta -= alpha * grad
+            elif alpha == "1/sqrt(t)":
+                theta -= 1./sqrt(step_size) * grad
+                step_size += 1
+            elif alpha == "1/t":
+                theta -= 1./step_size * grad
+                step_size += 1
+            else:
+                theta -= 1./step_size * grad
+                step_size += 1
+            
+            theta_hist[i][row] = theta
+            loss_hist[i][row] = compute_square_loss(X[row], y[row], theta)
+    
+    return theta_hist, loss_hist
+
 
 
 def main():

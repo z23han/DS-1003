@@ -50,9 +50,9 @@ def shooting_algorithm(X, y, lambd, num_iter=1000, tolerance=1e-6):
     return w
 
 
-def mse(X, y, w, b):
+def mse(X, y, w):
     n = X.shape[0]
-    return 1./n * np.sum((np.dot(X, w) + b - y)**2)
+    return 1./n * np.sum((np.dot(X, w) - y)**2)
 
 
 
@@ -63,7 +63,7 @@ def test_lasso():
     error_list = []
     for lambd in lambd_grid:
         w = shooting_algorithm(X_train, y_train, lambd)
-        error = mse(X_val, y_val, w, b=0)
+        error = mse(X_val, y_val, w)
         error_list.append(error)
         print("lambd={}, mse={}".format(lambd, error))
     
@@ -81,9 +81,9 @@ def test_sklearn():
     lambd_grid = np.unique(np.concatenate((10.**np.arange(-6,1,1), np.arange(1,3,.3) )))
     error_list = []
     for lambd in lambd_grid:
-        model = Lasso(alpha=lambd)
+        model = Lasso(alpha=lambd, fit_intercept=False)
         model.fit(X_train, y_train)
-        error = mse(X_val, y_val, model.coef_, model.intercept_)
+        error = mse(X_val, y_val, model.coef_)
         error_list.append(error)
         print("lambd={}, mse={}".format(lambd, error))
     

@@ -152,22 +152,22 @@ def plot_prediction_functions(x, pred_fns, x_train, y_train, legend_loc="best"):
 	return fig
 
 def plot_confusion_matrix(cm, title, classes):      
-	 plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)     
-	 plt.title(title)       
-	 plt.colorbar()     
-	 tick_marks = np.arange(len(classes))       
-	 plt.xticks(tick_marks, classes, rotation=45)       
-	 plt.yticks(tick_marks, classes)        
+	plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)     
+	plt.title(title)       
+	plt.colorbar()     
+	tick_marks = np.arange(len(classes))       
+	plt.xticks(tick_marks, classes, rotation=45)       
+	plt.yticks(tick_marks, classes)        
 
-	 thresh = cm.max() / 2.        
-	 for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):     
-		 plt.text(j, i, format(cm[i, j], 'd'),      
-				  horizontalalignment="center",     
-				  color="white" if cm[i, j] > thresh else "black")      
+	thresh = cm.max() / 2.        
+	for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):     
+		plt.text(j, i, format(cm[i, j], 'd'),      
+				horizontalalignment="center",     
+				color="white" if cm[i, j] > thresh else "black")      
 
-	 plt.tight_layout()        
-	 plt.ylabel('True label')       
-	 plt.xlabel('Predicted label')
+	plt.tight_layout()        
+	plt.ylabel('True label')       
+	plt.xlabel('Predicted label')
 
 def main():
 	lasso_data_fname = "lasso_data.pickle"
@@ -231,7 +231,7 @@ def main():
 	## You still have to make y_true and y_pred by thresholding as per the insturctions in the question.
 	y_true = [1, 0, 1, 1, 0, 1]
 	y_pred = [0, 0, 1, 1, 0, 1]
-	eps = 1e-1;
+	eps = 1e-1
 	cnf_matrix = confusion_matrix(y_true, y_pred)
 	plt.figure()
 	plot_confusion_matrix(cnf_matrix, title="Confusion Matrix for $\epsilon = {}$".format(eps), classes=["Zero", "Non-Zero"])

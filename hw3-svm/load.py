@@ -7,6 +7,9 @@ import random
 Note:  This code is just a hint for people who are not familiar with text processing in python. There is no obligation to use this code, though you may if you like. 
 '''
 
+train_file_name = "reviews_train.pkl"
+val_file_name = "reviews_val.pkl"
+
 
 def folder_list(path,label):
     '''
@@ -33,8 +36,7 @@ def read_data(file):
     symbols = '${}()[].,:;+-*/&|<>=~" '
     words = map(lambda Element: Element.translate(str.maketrans("", "", symbols)).strip(), lines)
     # For python 3 users: use the following instead
-    # words = list(filter(None, words))
-    words = filter(None, words)
+    words = list(filter(None, words))
     return words
 	
 ###############################################
@@ -54,12 +56,23 @@ def shuffle_data():
 	
     review = pos_review + neg_review
     random.shuffle(review)
-	
+
+    from sklearn.model_selection import train_test_split
+
+    train_data, val_data = train_test_split(review, test_size=0.25, random_state=0)
+
+    with open(train_file_name, 'wb') as f:
+        pickle.dump(train_data, f)
+        print("saved train data to {}".format(train_file_name))
+    
+    with open(val_file_name, 'wb') as f:
+        pickle.dump(val_data, f)
+        print("saved validation data to {}".format(val_file_name))
+
 '''
 Now you have read all the files into list 'review' and it has been shuffled.
 Save your shuffled result by pickle.
 *Pickle is a useful module to serialize a python object structure. 
 *Check it out. https://wiki.python.org/moin/UsingPickle
 '''
- 
 

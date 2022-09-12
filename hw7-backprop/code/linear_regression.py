@@ -91,7 +91,7 @@ def main():
     estimator.fit(X_train, y_train)
     name = "Linear regression"
     pred_fns.append({"name":name, "preds": estimator.predict(X) })
-    plot_prediction_functions(x, pred_fns, x_train, y_train, legend_loc="best")
+    plot_utils.plot_prediction_functions(x, pred_fns, x_train, y_train, legend_loc="best")
 
 if __name__ == '__main__':
-  main()
+    main()

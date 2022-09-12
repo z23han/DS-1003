@@ -19,7 +19,23 @@ class RidgeRegression(BaseEstimator, RegressorMixin):
         self.prediction = nodes.VectorScalarAffineNode(x=self.x, w=self.w, b=self.b,
                                                  node_name="prediction")
         # TODO
+        self.objective = nodes.SumNode(
+            a=nodes.SquaredL2DistanceNode(a=self.prediction, b=self.y, node_name='square loss'), 
+            b=nodes.L2NormPenaltyNode(l2_reg=l2_reg, w=self.w, node_name='l2 reg penalty'), 
+            node_name="sum node"
+        )
 
+        self.inputs = [self.x]
+        self.outcomes = [self.y]
+        self.parameters = [self.w, self.b]
+
+        self.graph = graph.ComputationGraphFunction(
+            self.inputs, 
+            self.outcomes, 
+            self.parameters, 
+            self.prediction, 
+            self.objective
+        )
 
     def fit(self, X, y):
         num_instances, num_ftrs = X.shape
@@ -93,4 +109,4 @@ def main():
     plot_utils.plot_prediction_functions(x, pred_fns, x_train, y_train, legend_loc="best")
 
 if __name__ == '__main__':
-  main()
+    main()
